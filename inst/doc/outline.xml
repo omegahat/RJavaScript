@@ -1,0 +1,192 @@
+<article xmlns:r="http://www.r-project.org"
+	 xmlns:omg="http://www.omegahat.org"
+         xmlns:js="http://www.ecma-international.org/publications/standards/Ecma-262.htm"
+         xmlns:xi="http://www.w3.org/2003/XInclude">
+
+<title></title>
+<xi:include href="http://localhost/home/authorInfo.xml" xpointer="xpointer(//author)"/>
+<section>
+<title>Motivation</title>
+<para>
+The idea is that R programmers can create JavaScript functions for use
+in SVG, Flash and HTML documents for Google Maps, Google Earth, and
+generally. While they can write the code directly in JavaScript, and
+this is best, for some or at certain times, it may be convenient to
+write the JavaScript code as if it were R and to have the R code be
+"compiled" to JavaScript code.
+For example, if we want to end up a with a JavaScript function
+that looks like<footnote><para>Taken  from linkedSmoother.js in
+SVGAnnotation/tests</para></footnote>
+<js:code><![CDATA[
+function setLambda(evType, group, val)
+{
+        /* If it is the same value, don't do anything*/
+    if(Math.floor(val) == cur_lambda)
+	return(0);
+    setVisibility(cur_lambda, 'hidden', numPoints);
+    cur_lambda = Math.floor(val);
+    setVisibility(cur_lambda, 'visible', numPoints);
+}
+]]></js:code>
+The corresponding R code could be written as
+<r:code>
+setLambda =
+function(evType, group, val)
+{
+       # If it is the same value, don't do anything
+    if(Math.floor(val) == cur_lambda)
+	return(0)
+    setVisibility(cur_lambda, 'hidden', numPoints)
+    cur_lambda = Math.floor(val)
+    setVisibility(cur_lambda, 'visible', numPoints)
+}
+</r:code>
+Okay, so that one is entirely trivial, but it illustrates the point.
+We can compile this by adding ';'  to the end of each statement.
+</para>
+<para>
+Let's look at a different function, or in this case expression.
+<js:code>
+       el = document.getElementById("residual-group-" + lambda);
+</js:code>
+Again, we can leave this as is. Since we don't actually evaluate
+this, the string concatenation, <js:expr>"residual-group-" + lambda</js:expr>,
+does not cause a problem.
+</para>
+<para>
+To increase semantic information so that we can do analysis in R of the function,
+we might want to write method invocation as 
+<r:code>
+  document$getElementById("residual-group" + lambda)
+</r:code>
+The $ operator indicates a  call to the method
+getElementById in the object document.
+</para>
+<para>
+Similarly, the [[ operator can be used for accessing attributes.
+For example,
+<r:code>
+ obj[["visible"]]
+</r:code>
+would correspond to <js:expr>obj.visible</js:expr> in JavaScript.
+We could use $ for both as we can recognize a method invocation
+when processing the R code.
+</para>
+<para>
+What about loops?
+Consider the JavaScript code 
+<js:code><![CDATA[
+for(i = 0 ; i < numPoints; i++) {
+    el = document.getElementById("residual-" + lambda + "-" + (i+1));
+    el.setAttribute('visibility', state);
+}
+]]></js:code>
+We can recognize R code that loops over a sequence object
+and map it to the JavaScript code above. For example,
+<r:code>
+for(i in seq(along = obj)) {...}
+for(i in seq(length = numPoints)) {...}
+for(i in 1:numPoints) {...}
+</r:code>
+</para>
+</section>
+<section>
+<title>Keywords</title>
+<para>
+The keywords are 
+var, if, switch, for, while, do, break, continue, return, try, throw, and with
+</para>
+<para>
+++, --, +=
+</para>
+<para>
+instanceof
+</para>
+<para>
+null, undefined, NULL
+</para>
+
+<para>
+The switch mechanism in JavaScript can be mimiced with the
+<r:func>switch</r:func> function in R.
+</para>
+<para>
+The JavaScript return  is richer than R's and can return an associative array in
+a different form
+<js:code>
+return {
+    event: event,
+    op: event.type,
+    to: event.srcElement,
+    x: event.clientX + document.body.scrollLeft,
+    y: event.clientY + document.body.scrollTop};
+</js:code>
+(See http://www.crockford.com/javascript/survey.html)
+</para>
+
+<para>
+JavaScript Constructors of the form <js:expr>new Class(a, b);</js:expr>
+can be written as <r:expr>new("Class", a, b)</r:expr>
+</para>
+
+<para>
+We can create empty associative arrays with
+<r:code>
+  foo = {}
+</r:code>
+We have to recognize this as being the empty expression block.
+</para>
+<para>
+Empty arrays are trickier as R won't parse <r:expr>[]</r:expr>.
+</para>
+
+</section>
+<section>
+<title>Variables in R</title>
+<para>
+We can serialize R objects into the JavaScript using RJSONIO or rjson.
+Further, we can analyze the R code and rewrite it, but also
+substitute particular symbols with their R values.
+For example, suppose we want JavaScript code such as
+<r:code>
+  var sliderStyles= {"stroke":"dimgray", "stroke-width":3};
+  var invisSliderWidth = 15;
+  slider1 = new slider("alpha", "slider-alpha", 100, 510, 1, 475, 510, 
+                        len_a, 1, sliderStyles, invisSliderWidth, 
+                         "sliderSymbol", showVal, true);
+</r:code>
+in which showVal and slider1  refer to a JavaScript function and variable defined elsewhere.
+Then we might write this in R as
+<r:code>
+function(evt, len_a, len_b) {
+  sliderStyles= tb;
+  invisSliderWidth = 15;
+  slider1 = new slider("alpha", "slider-alpha", 100, 510, 1, 475, 510, 
+                        len_a, 1, sliderStyles, invisSliderWidth, 
+                         "sliderSymbol", showVal, true);
+   ...
+}
+</r:code>
+We have specified the initialization vale of sliderStyles with another variable.
+When we "compile" this, we can specify which R variables to substitute into the
+JavaScript code with, e.g.,
+<r:code>
+jsCompile(code, 
+          substitute = list(tb = c(stroke = "dimgray", 
+                                   'stroke-width' = 3)),
+           jsglobals = c(slider1, showVal))
+</r:code>
+</para>
+</section>
+<section>
+<title>Cons</title>
+<para>
+This may not be a good idea.  People should program JavaScript in
+JavaScript.  The difficult lies in that we can't run JavaScript
+embedded in R (for graphical content at least).  We have data in R and
+we want to export that.  We can do this with
+<omg:pkg>RJSONIO</omg:pkg>, but we have to write the JavaScript code
+separately or use a lot of string manipulation.
+</para>
+</section>
+</article>

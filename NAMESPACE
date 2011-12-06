@@ -1,0 +1,13 @@
+import(methods)
+import(RJSONIO)
+import(codetools)
+importFrom("methods", "show")
+
+export(jsTranslate) #, jsRewrite)
+exportMethods(jsTranslate) #, jsRewrite)
+
+exportClasses(JavaScriptCode, JavaScriptFunction)
+export(show)
+exportMethods("show")
+
+

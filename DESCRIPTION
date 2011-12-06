@@ -1,0 +1,26 @@
+Package: RJavaScript
+Version: 0.1-0
+Title: Tools for programming JavaScript using the R syntax
+Description: This is package that attempts to convert R code
+  to JavaScript code. The idea is that we can use this when
+   we are creating content for Web browsers or Flash applications
+   within R.  JavaScript is becoming increasingly important and relevant
+   for creating dynamic, interactive content for the Web and so how we present
+   statistical results.
+   RJSONIO allows us to export R data objects to JavaScript
+   so that we can use those objects within JavaScript functions.
+   This package attempts to allow R programmers to use the familiar
+   R syntax to create JavaScript code. The R code should refer to 
+   JavaScript classes and methods and not other R code.
+   It is possible that we may be able to use this package to 
+   export the implementation of some R functions to JavaScript.
+   However, this is likely to be imited.
+   If you are familiar with JavaScript and can program reasonably easily
+   with that language, you will probably be better off writing the code
+   directly in JavaScript rather than using this translator.
+Author: Duncan Temple Lang
+Maintainer: Duncan Temple Lang <duncan@wald.ucdavis.edu>
+License: BSD
+Imports: RJSONIO, methods, codetools
+
+
